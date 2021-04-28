@@ -8,16 +8,21 @@ void yyerror(const char* err);
 extern int yylex();
 %}
 
-%define api.value.type { std::string* }
+/* %define api.value.type { std::string* } */
+%union {
+  std::string* str;
+  float num;
+  int category;
+}
 
-%token IDENTIFIER
-%token NUMBER
-%token EQUALS PLUS MINUS TIMES DIVIDEDBY
-%token SEMICOLON LPAREN RPAREN
+%token <str> IDENTIFIER
+%token <num> NUMBER
+%token <category> EQUALS PLUS MINUS TIMES DIVIDEDBY
+%token <category> SEMICOLON LPAREN RPAREN
 
-%type expression
-%type statement
-%type program
+%type <num> expression
+/* %type statement
+%type program */
 
 %left PLUS MINUS
 %left TIMES DIVIDEDBY

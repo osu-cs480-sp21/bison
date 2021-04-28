@@ -2,6 +2,9 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <cstdlib>
+
+#include "parser.hpp"
 
 struct word {
   std::string lexeme;
@@ -31,50 +34,64 @@ void save_word(const std::string& lexeme, const std::string& category) {
 [ \t\n]*      /* Ignore whitespace. */
 
 [a-z][0-9]? {
-  save_word(yytext, "IDENTIFIER");
-  ids.insert(yytext);
+  /* save_word(yytext, "IDENTIFIER");
+  ids.insert(yytext); */
+  yylval.str = new std::string(yytext, yyleng);
+  return IDENTIFIER;
 }
 
 [0-9]+("."[0-9]+)? {
-  save_word(yytext, "NUMBER");
+  /* save_word(yytext, "NUMBER"); */
+  yylval.num = atof(yytext);
+  return NUMBER;
 }
 
 "=" {
-  save_word(yytext, "EQUALS");
+  yylval.category = EQUALS;
+  return yylval.category;
 }
 
 "+" {
-  save_word(yytext, "PLUS");
+  yylval.category = PLUS;
+  return yylval.category;
 }
 
 "-" {
-  save_word(yytext, "MINUS");
+  yylval.category = MINUS;
+  return yylval.category;
 }
 
 "*" {
-  save_word(yytext, "TIMES");
+  yylval.category = TIMES;
+  return yylval.category;
 }
 
 "/" {
-  save_word(yytext, "DIVIDEDBY");
+  yylval.category = DIVIDEDBY;
+  return yylval.category;
 }
 
 ";" {
-  save_word(yytext, "SEMICOLON");
+  yylval.category = SEMICOLON;
+  return yylval.category;
 }
 
 "(" {
-  save_word(yytext, "LPAREN");
+  yylval.category = LPAREN;
+  return yylval.category;
 }
 
 ")" {
-  save_word(yytext, "RPAREN");
+  yylval.category = RPAREN;
+  return yylval.category;
 }
 
 . {
   std::cerr << "Invalid symbol on line " << yylineno
     << ": " << yytext << std::endl;
   have_error = true;
+  yylval.category = yytext[0];
+  return yytext[0];
 }
 
 <<EOF>> {
