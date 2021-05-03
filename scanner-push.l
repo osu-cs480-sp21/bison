@@ -6,6 +6,10 @@
 
 #include "parser.hpp"
 
+YYSTYPE yylval;
+
+yypstate* pstate = yypstate_new();
+
 struct word {
   std::string lexeme;
   std::string category;
@@ -37,7 +41,12 @@ void save_word(const std::string& lexeme, const std::string& category) {
   /* save_word(yytext, "IDENTIFIER");
   ids.insert(yytext); */
   yylval.str = new std::string(yytext, yyleng);
-  return IDENTIFIER;
+  /* return IDENTIFIER; */
+  int s = yypush_parse(pstate, IDENTIFIER, &yylval);
+  if (s != YYPUSH_MORE) {
+    yypstate_delete(pstate);
+    return s;
+  }
 }
 
 [0-9]+("."[0-9]+)? {

@@ -8,6 +8,9 @@ void yyerror(const char* err);
 extern int yylex();
 %}
 
+%define api.push-pull push
+%define api.pure full
+
 /* %define api.value.type { std::string* } */
 %union {
   std::string* str;
