@@ -4,25 +4,33 @@
 #include <set>
 #include <cstdlib>
 
-#include "parser.hpp"
+#include "parser-push.hpp"
 
 YYSTYPE yylval;
 
 yypstate* pstate = yypstate_new();
 
-struct word {
+/* struct word {
   std::string lexeme;
   std::string category;
-};
+}; */
 
-std::vector<struct word> words;
-std::set<std::string> ids;
+/* std::vector<struct word> words;
+std::set<std::string> ids; */
 bool have_error = false;
 
-void save_word(const std::string& lexeme, const std::string& category) {
+/* void save_word(const std::string& lexeme, const std::string& category) {
   struct word word = { .lexeme = lexeme, .category = category };
   words.push_back(word);
-}
+} */
+
+#define PUSH_TOKEN(category) do {                     \
+  int s = yypush_parse(pstate, category, &yylval);  \
+  if (s != YYPUSH_MORE) {                             \
+    yypstate_delete(pstate);                          \
+    return s;                                         \
+  }                                                   \
+} while (0)
 
 %}
 
@@ -42,57 +50,53 @@ void save_word(const std::string& lexeme, const std::string& category) {
   ids.insert(yytext); */
   yylval.str = new std::string(yytext, yyleng);
   /* return IDENTIFIER; */
-  int s = yypush_parse(pstate, IDENTIFIER, &yylval);
-  if (s != YYPUSH_MORE) {
-    yypstate_delete(pstate);
-    return s;
-  }
+  PUSH_TOKEN(IDENTIFIER);
 }
 
 [0-9]+("."[0-9]+)? {
   /* save_word(yytext, "NUMBER"); */
   yylval.num = atof(yytext);
-  return NUMBER;
+  PUSH_TOKEN(NUMBER);
 }
 
 "=" {
   yylval.category = EQUALS;
-  return yylval.category;
+  PUSH_TOKEN(yylval.category);
 }
 
 "+" {
   yylval.category = PLUS;
-  return yylval.category;
+  PUSH_TOKEN(yylval.category);
 }
 
 "-" {
   yylval.category = MINUS;
-  return yylval.category;
+  PUSH_TOKEN(yylval.category);
 }
 
 "*" {
   yylval.category = TIMES;
-  return yylval.category;
+  PUSH_TOKEN(yylval.category);
 }
 
 "/" {
   yylval.category = DIVIDEDBY;
-  return yylval.category;
+  PUSH_TOKEN(yylval.category);
 }
 
 ";" {
   yylval.category = SEMICOLON;
-  return yylval.category;
+  PUSH_TOKEN(yylval.category);
 }
 
 "(" {
   yylval.category = LPAREN;
-  return yylval.category;
+  PUSH_TOKEN(yylval.category);
 }
 
 ")" {
   yylval.category = RPAREN;
-  return yylval.category;
+  PUSH_TOKEN(yylval.category);
 }
 
 . {
@@ -100,14 +104,17 @@ void save_word(const std::string& lexeme, const std::string& category) {
     << ": " << yytext << std::endl;
   have_error = true;
   yylval.category = yytext[0];
-  return yytext[0];
+  PUSH_TOKEN(yytext[0]);
 }
 
 <<EOF>> {
-  if (have_error) {
+  /* if (have_error) {
     return 1;
   }
-  return 0;
+  return 0; */
+  int s = yypush_parse(pstate, 0, NULL);
+  yypstate_delete(pstate);
+  return s;
 }
 
 

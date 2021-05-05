@@ -63,7 +63,7 @@ void yyerror(const char* err) {
 }
 
 int main() {
-  if (!yyparse()) {
+  if (!yylex()) {
     std::map<std::string, float>::iterator it;
     for (it = symbols.begin(); it != symbols.end(); it++) {
       std::cout << it->first << " = " << it->second << std::endl;
